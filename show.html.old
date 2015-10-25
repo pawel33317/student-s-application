@@ -1,0 +1,108 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="http://maps.googleapis.com/maps/api/js"></script>
+<script>
+var jsonPoints = [];//punkty pobrane z serwera
+var myPosition;//moja pozycja
+var map;
+//pobieranie punktów z serwera
+function loadDoc() {
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+		jsonPoints = JSON.parse(xhttp.responseText);	
+		//wyświetlanie w postaci listy
+		document.getElementById("pointsList").innerHTML += "<ul>";
+		for(i = 0; i < jsonPoints.length; i++) {
+			document.getElementById("pointsList").innerHTML += '<li><a onclick="initialize('+i+')">'+jsonPoints[i].name+'</a></li>';
+		}
+		document.getElementById("pointsList").innerHTML += "</ul>";
+    }
+  }
+  xhttp.open("GET", "http://localhost/maps/loaction.php", true);
+  xhttp.send();
+} 
+//pobiera naszą lokalizację i wywołuje funkcję sukcesu lub porażki
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(getLocationSuccess,getLocationError);
+    } else { 
+        document.getElementById("locationInfo").innerHTML = "Przeglądarka ta nie wspomaga geolokalizacji. Musisz ustawić ręcznie.";
+    }
+}
+function getLocationSuccess(position) {
+    document.getElementById("locationInfo").innerHTML = "Twoja pozycja to: [Latitude: " + position.coords.latitude + ", Longitude: " + position.coords.longitude+"]";
+	//ustawia pozycję dla map googla
+	myPosition = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+}
+function getLocationError(err) {
+	document.getElementById("locationInfo").innerHTML = "Nieznana pozycja. Musisz ustawić ręcznie.";
+}
+//pokazuje mapę
+function initialize(index) {
+//document.getElementById('googleMap').style.display = 'block';
+	var myPoint=new google.maps.LatLng(jsonPoints[index].xPosition,jsonPoints[index].yPosition);
+	var bounds = new google.maps.LatLngBounds();
+	bounds.extend(myPoint);
+	if (myPosition)
+		bounds.extend(myPosition);
+
+	
+	var mapProp = {center:bounds.getCenter(), zoom:14, mapTypeId:google.maps.MapTypeId.ROADMAP};
+	map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+	//map.setCenter(bounds.getCenter(), map.getBoundsZoomLevel(bounds));
+	if (myPosition){
+		map.fitBounds(bounds);
+		var markerMyPosition=new google.maps.Marker({position:myPosition,});
+		markerMyPosition.setMap(map)
+	}
+	var markerMyPoint=new google.maps.Marker({position:myPoint,icon:'pointer.png'});
+	markerMyPoint.setMap(map);
+	
+	
+google.maps.event.addListener(markerMyPoint, 'click', function() {
+	var infowindow = new google.maps.InfoWindow({content:jsonPoints[index].name});
+  infowindow.open(map,markerMyPoint);
+  });
+  
+  
+    google.maps.event.addListener(map, 'click', function(event) {
+    placeMarker(event.latLng);
+  });
+  
+  
+}
+
+
+function placeMarker(location) {
+  var marker = new google.maps.Marker({
+    position: location,
+    map: map,
+  });
+  /*var infowindow = new google.maps.InfoWindow({
+    content: 'Latitude: ' + location.lat() + '<br>Longitude: ' + location.lng()
+  });
+  infowindow.open(map,marker);*/
+}
+
+
+
+getLocation();
+
+
+//document.getElementById('googleMap').style.display = 'none';
+//google.maps.event.addDomListener(window, 'load', initialize);
+loadDoc();
+</script>
+</head>
+
+<body>
+<h1>Maps test</h1><br>
+<div id="locationInfo">Ładowanie ...</div>
+<div id="pointsList"></div>
+<div id="googleMap" style="width:400px;height:400px;"></div>
+
+
+</body>
+</html>
