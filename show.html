@@ -74,7 +74,7 @@ function loadDoc() {
 			document.getElementById("pointsList").innerHTML += "</ul>";
 		}
 	}
-	xhttp.open("GET", "http://192.168.0.105/maps/loaction.php", true);
+	xhttp.open("GET", "http://localhost/maps/loaction.php", true);
 	xhttp.send();
 } 
 
@@ -107,6 +107,7 @@ function initialize(index) {
 	
 	//po kliknięciu na marker punktu wyświetli jego nazwę
 	google.maps.event.addListener(markerMyPoint, 'click', function() {
+		alert('sss');
 		var infowindow = new google.maps.InfoWindow({content:jsonPoints[index].name});
 		infowindow.open(map,markerMyPoint);
 	});
@@ -121,8 +122,9 @@ function initialize(index) {
 //zmienia moją pozycję po kliknięciu na mapie
 function changeMyPosition(location) {
 	myPosition = location;
-	markerMyPosition.setMap(null);//usuwa z mapy starą pozycję
-	markerMyPosition = new google.maps.Marker({position: location,map: map,});
+	if(markerMyPosition)
+		markerMyPosition.setMap(null);//usuwa z mapy starą pozycję
+	markerMyPosition = new google.maps.Marker({position: location, map: map});
 	showMyPositionHTML(location);
 }
 
